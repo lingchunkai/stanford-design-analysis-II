@@ -1,0 +1,63 @@
+\documentclass[10pt]{article}
+ 
+\usepackage[margin=1in]{geometry} 
+\usepackage{amsmath,amsthm,amssymb, graphicx, multicol, array}
+ 
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+ 
+\newenvironment{problem}[2][Problem]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+
+\begin{document}
+ 
+\title{Design and Analysis of Algorithms II: Optional Exercises (Stanford Coursera)}
+\author{Ling Chun Kai}
+\maketitle
+ 
+\begin{problem}{1}
+Consider a connected undirected graph $G$ with not necessarily distinct edge costs. Consider two different minimum-cost spanning trees of $G$, $T$ and $T′$. Is there necessarily a sequence of minimum-cost spanning trees $T=T_0,T_1,T_2,…,T_r=T′$ with the property that each consecutive pair $T_i,T_{i+1}$ of MSTs differ by only a single edge swap? Prove the statement or exhibit a counterexample.
+\end{problem}
+
+\begin{proof}[Solution]
+Yes, such a sequence of trees exists. Denote $T_u = T \cap T'$ to be the set of edges common to both MSTs $T$ and $T'$. Further denote $T-T_u$ to be the set of edges in $T$ but not in $T'$. We provide a proof by (constructive) induction on $|T_u|$. When $|T_u|=0$, the statement is vacuously true. Now, we will show that if $|T_u|=n$, then there exists an edge swap that maintains the MST property such that the resultant number of shared edges drops by 1. If this is true, then by the induction hypothesis, we have constructed the required sequence of trees.
+
+WLOG, let $T'$ be the tree with the largest edge not in $T_u$ (choose arbitrarily in the event of ties). Name one of those minimum cost edges $e'$ from $T'-T_u$ and add it to $T$, forming $T+e'$. Since $T$ is a tree, $T+e'$ has at least one cycle $C$. We argue that $C$ must contain an edge $e$ from $T-T_u$; if not, then $C$ will be contained in $T'$, contradicting the fact that $T'$ is a tree. Notice that $T+e'-e$ remains a tree. We claim that $cost(e)=cost(e')$. Since by construction $cost(e) \ge cost(e')$, if $cost(e) > cost(e')$ we will have created a new, strictly cheaper MST in the form of $T+e'-e'$. So, $T+e'-e$ is also an MST which is constructed by a single edge swap. More importantly, $|T+e'-e \cap T'|=|T_u|-1$, meaning we are one step closer to converting $T$ to $T'$. By the inductive hypothesis, such a finite sequence exists.
+
+\end{proof}
+
+\begin{problem}{2}
+Consider the following algorithm. The input is a connected undirected graph with edge costs (distinct, if you prefer). The algorithm proceeds in iterations. If the current graph is a spanning tree, then the algorithm halts. Otherwise, it picks an arbitrary cycle of the current graph and deletes the most expensive edge on the cycle. Is this algorithm guaranteed to compute a minimum-cost spanning tree? Prove it or exhibit a counterexample.
+\end{problem}
+
+\begin{proof}[Solution]
+Yes, the algorithm is guaranteed to produce a MST. However, note that it is computationally inefficient - we will have to remove $\mathcal{O}(E)=\mathcal{O}(V^2)$ edges in the worst case. 
+
+We assume the simple case where the edge costs are distinct, so there is exactly one unique MST. Also note that the procedure does indeed result in a tree; there are eventually no cycles, and the deletion of any edge contained in a cycle cannot possibly disconnect the graph (assuming it was initially connected to begin with). What remains is to prove that edge costs are minimal.
+
+Suppose this procedure is incorrect. Then, there must be some edge $e$ which was deleted, but is in fact in the true MST $T$. Furthermore, $e$ lies in some cycle $C$ in which it is of strictly maximum cost. Now we know $T-e$ has exactly 2 connected components; we call them $A$ and $B$. $C$ must contain at least $2$ edges crossing from $A$ to $B$, and one of them is $e$. Let $e' \neq e$ be one such edge. Since $e'$ is in $C$, $cost(e') < cost(e)$. However, we also know that $T-e+e'$ is connected, since $e'$ connects $A$ to $B$; yet $T-e+e'$ yields a strictly cheaper cost spanning tree compared to $T$, which leads us to a contradiction; $T$ is not minimum cost.
+\end{proof}
+
+\begin{problem}{3}
+Consider the following algorithm. The input is a connected undirected graph with edge costs (distinct, if you prefer). The algorithm proceeds in phases. Each phase adds some edges to a tree-so-far and reduces the number of vertices in the graph (when there is only 1 vertex left, the MST is just the empty set). In a phase, we identify the cheapest edge $e_v$ incident on each vertex $v$ of the current graph. Let F={$e_v$} be the collection of all such edges in the current phase. Obtain a new (smaller) graph by contracting all of the edges in $F$ --- so that each connected component of $F$ becomes a single vertex in the new graph --- discarding any self-loops that result.Let $T$ denote the union of all edges that ever get contracted in a phase of this algorithm. Is $T$ guaranteed to be a minimum-cost spanning tree? Prove it or exhibit a counterexample.
+\end{problem}
+
+\begin{proof}[Solution]
+The state algorithm is some sort of 'parallel' or locally greedy' Prim's algorithm, where multiple edges are added at a time, greedily with respect to each vertex.  However, the algorithm is not guaranteed to lead to a MST, the greedy algorithm must be 'global' to be optimal.
+
+Consider $G$, a cycle $ABCDA$, where edge costs are $cost(AB)=1, cost(BC)=10, cost(CD)=10, cost(DA)=100$. Obviously the MST is just $ABCD$ - we leave out the edge with cost $100$. Suppose we start off with the tree-to-be $AB$. The next phase, we add in both edges $AD$ and $BC$. No contraction needs to be done. However, the addition of edge $AD$ is incorrect; furthermore, no other future steps can ever result in it being removed from the MST being constructed.
+
+\end{proof}
+
+\begin{problem}{4}
+Recall the definition of a minimum bottleneck spanning tree from Problem Set 1. Give a linear-time (i.e., $\mathcal{O}(m)$) algorithm for computing a minimum bottleneck spanning tree of a connected undirected graph. [Hint: make use of a non-trivial linear-time algorithm discussed in Part 1.]
+\end{problem}
+\begin{proof}[Solution]
+First, notice that the minimum bottleneck tree problem is trivial once we know what the size of the bottleneck is - we simply have to run any greedy algorithm (eg. Depth First Search), discarding edges above the given threshold. Thus, we will focus our efforts on finding the value of such a bottleneck. Insofar as that is concerned, the problem is equivalent to finding the minimum edge cost, or threshold such that the graph still remains connected, after removing all more expensive edges.
+
+We first notice that the number of connected components is non-increasing as we increase the threshold - in fact, it decreases from $n$ (no edges included) to $1$ (all edges included). Thus, a initial attempt at doing this might be to use some form of binary search on edge costs. However, this defeats the purpose of the problem - the cost of sorting is $\mathcal{O}(m\textrm{log}(m))$, we may as well go ahead with Prims or Kruskals directly (a MST is a MBT).
+
+What we notice instead is that we do not have to explicitly sort all edges. Indeed, by moving along the ideas of the quickselect algorithm, we can obtain an expected linear runtime. First, select a random edge $e$. Obtain a partial sort in terms of edge cost, i.e. all edges smaller than $e$ on the left, and others on the right. Next, perform BFS ($\mathcal{O}(m)$) assuming the threshold is $cost(e)$. Two cases. A) the graph is connected. We delete all edges on the right of $e$ and repeat the process on all edges on the left of $e$ and including $e$. B) The graph is disconnected. We now know that the threshold is too low. Obtain a new graph by contracting all individual connected components into a single node ($\mathcal{O}(m)$). Delete all edges to the left of $e$, including $e$. Repeat the process on the remaining edges. We then repeat this cycle (steps 1 and 2) until there are no edges remaining. Notice how every stage takes time linear in the number of remaining edges, just like quickselect. Since we randomly chose $e$, a similar analysis shows that we get expected $\mathcal{O}(m)$ time.
+
+\end{proof}
+\end{document}
